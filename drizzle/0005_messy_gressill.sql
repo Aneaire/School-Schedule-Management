@@ -1,0 +1,1 @@
+ALTER TABLE `teacher_subjects` ADD `classroom_id` integer NOT NULL REFERENCES classrooms(id);

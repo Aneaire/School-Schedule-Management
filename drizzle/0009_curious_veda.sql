@@ -1,0 +1,1 @@
+ALTER TABLE `schedules` ADD `section_id` integer NOT NULL REFERENCES sections(section_id);

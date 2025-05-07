@@ -1,0 +1,1 @@
+ALTER TABLE `teachers` ADD `major_subject` text NOT NULL;
