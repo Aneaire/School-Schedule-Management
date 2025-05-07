@@ -29,7 +29,42 @@ const TeacherDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
   const router = useRouter();
+
+  // Add reset database function
+  const handleResetDatabase = async () => {
+    if (
+      !confirm(
+        "Are you sure you want to reset the database? This will delete all data."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setResetting(true);
+      const response = await fetch("/api/reset-db", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to reset database");
+      }
+
+      // Refresh the teachers list
+      const res = await fetch("/api/teachers");
+      const data = await res.json();
+      setTeachers(data);
+
+      alert("Database reset successfully!");
+    } catch (error) {
+      console.error("Error resetting database:", error);
+      alert("Failed to reset database. Please try again.");
+    } finally {
+      setResetting(false);
+    }
+  };
 
   // Fetch the list of teachers from the backend or API
   useEffect(() => {
@@ -109,7 +144,32 @@ const TeacherDashboard = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <div>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleResetDatabase}
+                disabled={resetting}
+                className="flex items-center text-sm justify-center bg-red-600 hover:bg-red-700 text-white"
+              >
+                {resetting ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="size-5 mr-2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+                    />
+                  </svg>
+                )}
+                {resetting ? "Resetting..." : "Reset DB"}
+              </Button>
               <Link href={"/additional"}>
                 <Button className="flex items-center text-sm justify-center bg-blue-600 hover:bg-blue-700 text-white">
                   <svg
