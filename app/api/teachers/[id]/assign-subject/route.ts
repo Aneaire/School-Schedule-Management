@@ -249,20 +249,17 @@ export async function POST(
     const [newSchedule] = await db
       .insert(schedules)
       .values({
-        classId: defaultClass.classId,
         teacherId,
         subjectId,
         roomId,
         dayId: dayRecord.dayId,
         timeId: timeRecord.timeId,
         sectionId,
+        classId: defaultClass.classId,
       })
       .returning();
 
-    return Response.json({
-      success: true,
-      data: newSchedule,
-    });
+    return Response.json(newSchedule, { status: 201 });
   } catch (error) {
     console.error("Error assigning subject:", error);
     return Response.json(
