@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { db } from "~/lib/db";
 import { sections } from "~/lib/schema";
+import { db } from "~/lib/tursoDb";
 
 export async function createSection({
   sectionName,

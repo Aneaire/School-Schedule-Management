@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
-import { db } from "~/lib/db";
 import { rooms } from "~/lib/schema";
+import { db } from "~/lib/tursoDb";
 
 const seedRooms = [
   { roomCode: "CBS 1 101", roomName: "College of Business Studies" },

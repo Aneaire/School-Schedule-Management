@@ -1,7 +1,7 @@
 "use server";
 
-import { db } from "~/lib/db";
 import { courses } from "~/lib/schema";
+import { db } from "~/lib/tursoDb";
 
 export async function getAllCourses() {
   try {

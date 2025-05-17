@@ -15,12 +15,15 @@
     "seed:courses": "tsx scripts/seed-courses.ts",
     "seed:teachers": "tsx scripts/seed-teachers.ts",
     "seed:markup:data": "tsx scripts/seed-markup-data.ts",
-    "reset:db": "tsx scripts/reset-db.ts"
+    "reset:db": "tsx scripts/reset-db.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.18.2",
     "@formkit/auto-animate": "^0.8.2",
     "@hookform/resolvers": "^5.0.1",
+    "@libsql/client": "^0.15.6",
     "@paralleldrive/cuid2": "^2.2.2",
     "@radix-ui/react-avatar": "^1.1.7",
     "@radix-ui/react-checkbox": "^1.2.3",
@@ -38,6 +41,7 @@
     "better-sqlite3": "^11.9.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^16.5.0",
     "drizzle-kit": "^0.31.0",
     "drizzle-orm": "^0.43.1",
     "lucide-react": "^0.503.0",

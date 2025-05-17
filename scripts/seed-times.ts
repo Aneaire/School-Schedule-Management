@@ -1,5 +1,5 @@
-import { db } from "~/lib/db";
 import { days, times } from "~/lib/schema";
+import { db } from "~/lib/tursoDb";
 
 // Seed times (7:00 to 19:00, but you may want to adjust to 7:00 to 18:00 if 7pm is removed)
 const seedTimes = Array.from({ length: 13 }, (_, i) => {

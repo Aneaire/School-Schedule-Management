@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
-import { db } from "~/lib/db";
 import { sections } from "~/lib/schema";
+import { db } from "~/lib/tursoDb";
 
 export async function POST(request: Request) {
   try {

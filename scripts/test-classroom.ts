@@ -1,5 +1,5 @@
-import { db } from "~/lib/db";
 import { rooms } from "~/lib/schema";
+import { db } from "~/lib/tursoDb";
 
 const seedClassrooms = [
   { roomCode: "CLS101", roomName: "Computer Laboratory 1" },

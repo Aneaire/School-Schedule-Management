@@ -1,5 +1,5 @@
-import { db } from "~/lib/db";
 import { subjects } from "~/lib/schema";
+import { db } from "~/lib/tursoDb";
 
 const seedSubjects = [
   {

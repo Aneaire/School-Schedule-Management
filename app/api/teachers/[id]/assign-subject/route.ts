@@ -1,6 +1,5 @@
 // app/api/teachers/[id]/assign-subject/route.ts
 import { and, eq } from "drizzle-orm";
-import { db } from "~/lib/db";
 import {
   classes,
   courses,
@@ -12,6 +11,7 @@ import {
   teachers,
   times,
 } from "~/lib/schema";
+import { db } from "~/lib/tursoDb";
 
 // Function to ensure a course and class exist
 async function ensureCourseAndClassExist() {

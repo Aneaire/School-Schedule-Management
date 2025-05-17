@@ -1,5 +1,5 @@
-import { db } from "~/lib/db";
 import { sections } from "~/lib/schema";
+import { db } from "~/lib/tursoDb";
 
 const seedStudentSections = [
   // BSA Sections (courseId: 1)

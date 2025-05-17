@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "~/lib/db";
 import { courses } from "~/lib/schema";
+import { db } from "~/lib/tursoDb";
 
 export async function GET() {
   try {

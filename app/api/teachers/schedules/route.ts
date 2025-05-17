@@ -1,5 +1,4 @@
 import { and, eq } from "drizzle-orm";
-import { db } from "~/lib/db";
 import {
   days,
   rooms,
@@ -9,6 +8,7 @@ import {
   teachers,
   times,
 } from "~/lib/schema";
+import { db } from "~/lib/tursoDb";
 
 export async function GET(request: Request) {
   try {

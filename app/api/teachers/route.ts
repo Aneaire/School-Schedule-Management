@@ -1,8 +1,8 @@
 // app/api/teachers/route.ts
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { db } from "~/lib/db";
 import { schedules, subjects, teachers } from "~/lib/schema";
+import { db } from "~/lib/tursoDb";
 
 export async function GET() {
   try {
