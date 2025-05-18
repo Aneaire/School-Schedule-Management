@@ -41,6 +41,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
+import { formatTimeTo12Hour } from "~/lib/utils";
 import ScheduleConflictDialog from "./ScheduleConflictDialog";
 
 type Conflict = {
@@ -145,6 +146,7 @@ export default function AssignSubjectForm({
           subjectId: Number(data.subjectId),
           roomId: Number(data.roomId),
           sectionId: Number(data.sectionId),
+          teacherId,
         }),
       });
 
@@ -152,6 +154,7 @@ export default function AssignSubjectForm({
         const result = await res.json();
         if (result.conflicts) {
           setConflicts(result.conflicts);
+          console.log("Schedule conflict detected", result.conflicts);
           setShowDialog(true);
           throw new Error("Schedule conflict detected");
         }
@@ -242,6 +245,18 @@ export default function AssignSubjectForm({
       setSectionDaySchedules([]);
     }
   }, [selectedSectionId, selectedDay]);
+
+  // Fetch teacher schedules for the selected day
+  useEffect(() => {
+    if (teacherId && selectedDay) {
+      fetch(`/api/teachers/schedules?teacherId=${teacherId}&day=${selectedDay}`)
+        .then((res) => res.json())
+        .then((data) => setTeacherSchedules(data))
+        .catch(() => toast.error("Failed to load teacher schedules"));
+    } else {
+      setTeacherSchedules([]);
+    }
+  }, [teacherId, selectedDay]);
 
   const onSubmit = async (data: AssignFormData) => {
     assignSubjectMutation.mutate(data);
@@ -550,7 +565,8 @@ export default function AssignSubjectForm({
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Badge variant="outline" className="px-2 py-1">
-                                  {schedule.startTime} - {schedule.endTime}
+                                  {formatTimeTo12Hour(schedule.startTime)} -{" "}
+                                  {formatTimeTo12Hour(schedule.endTime)}
                                 </Badge>
                               </TooltipTrigger>
                               <TooltipContent>
@@ -583,7 +599,8 @@ export default function AssignSubjectForm({
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Badge variant="outline" className="px-2 py-1">
-                                  {schedule.startTime} - {schedule.endTime}
+                                  {formatTimeTo12Hour(schedule.startTime)} -{" "}
+                                  {formatTimeTo12Hour(schedule.endTime)}
                                 </Badge>
                               </TooltipTrigger>
                               <TooltipContent>
@@ -606,6 +623,40 @@ export default function AssignSubjectForm({
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {teacherSchedules.length > 0 ? (
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">
+                  Teacher schedules:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {teacherSchedules.map((schedule, index) => (
+                    <TooltipProvider key={index}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant="outline" className="px-2 py-1">
+                            {formatTimeTo12Hour(schedule.startTime)} -{" "}
+                            {formatTimeTo12Hour(schedule.endTime)}
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{schedule.subjectName}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Room: {schedule.roomName}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">
+                  Teacher schedules: <span className="text-green-500">✓</span>
+                </p>
               </div>
             )}
 

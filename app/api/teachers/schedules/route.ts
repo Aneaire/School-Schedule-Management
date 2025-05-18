@@ -1,3 +1,4 @@
+// app/api/teachers/schedules/route.ts
 import { and, eq } from "drizzle-orm";
 import {
   days,

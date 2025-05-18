@@ -1,3 +1,5 @@
+// app/api/sections/route.ts
+
 import { sections } from "~/lib/schema";
 import { db } from "~/lib/tursoDb";
 

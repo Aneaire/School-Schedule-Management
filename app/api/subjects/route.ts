@@ -1,3 +1,4 @@
+// app/api/subjects/route.ts
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { subjects } from "~/lib/schema";

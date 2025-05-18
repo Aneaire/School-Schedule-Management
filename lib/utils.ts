@@ -18,3 +18,13 @@ export function formatTimeRange(
   const endHour = startHour + durationInMinutes / 60;
   return `${to12Hour(startHour)} - ${to12Hour(endHour)}`;
 }
+
+export function formatTimeTo12Hour(time: string): string {
+  const [hourStr, minuteStr] = time.split(":");
+  const hour = parseInt(hourStr, 10);
+  const minute = parseInt(minuteStr, 10);
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+  if (minute === 0) return `${formattedHour}${suffix}`;
+  return `${formattedHour}:${minute}${suffix}`;
+}

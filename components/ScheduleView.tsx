@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, Clock, Loader2, MapPin, Search } from "lucide-react";
+import { Calendar, Loader2, Search } from "lucide-react";
 import { useState } from "react";
-import { Badge } from "~/components/ui/badge";
-import { Card, CardContent } from "~/components/ui/card";
+import { Card } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import {
   Select,
@@ -11,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import ScheduleCard from "./ScheduleCard";
 
 type Schedule = {
   scheduleId: number;
@@ -101,6 +101,7 @@ export default function ScheduleView({
     );
   }
 
+  console.log("Filtered Schedules:", filteredSchedules);
   return (
     <div className="max-w-md mx-auto bg-card rounded-lg border shadow-sm">
       <div className="p-4 border-b">
@@ -143,49 +144,7 @@ export default function ScheduleView({
         <div className="space-y-3 max-h-72 overflow-y-auto">
           {filteredSchedules.length > 0 ? (
             filteredSchedules.map((schedule: any) => (
-              <Card
-                key={schedule.scheduleId}
-                className="border hover:bg-accent/50 transition-colors"
-              >
-                <CardContent className="px-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-medium truncate">
-                          {schedule.subjectName}
-                        </span>
-                        <Badge variant="outline" className="text-xs shrink-0">
-                          {schedule.dayName}
-                        </Badge>
-                        <Badge variant="secondary" className="text-xs shrink-0">
-                          {schedule.sectionName} - Y{schedule.year}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center text-muted-foreground text-xs gap-2">
-                        <div className="flex items-center">
-                          <Clock className="w-3 h-3 mr-1" />
-                          <span className="font-mono">
-                            {schedule.startTime} - {schedule.endTime}
-                          </span>
-                        </div>
-                        <span className="text-border">•</span>
-                        <div className="flex items-center">
-                          <MapPin className="w-3 h-3 mr-1" />
-                          <span className="truncate">{schedule.roomName}</span>
-                        </div>
-                      </div>
-                      {schedule.teacherName && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {schedule.teacherName}
-                        </div>
-                      )}
-                    </div>
-                    <Badge variant="secondary" className="text-xs shrink-0">
-                      {getDuration(schedule.startTime, schedule.endTime)} min
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
+              <ScheduleCard key={schedule.scheduleId} schedule={schedule} />
             ))
           ) : (
             <div className="text-center py-8 text-muted-foreground">

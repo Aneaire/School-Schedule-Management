@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import AddClassroom from "~/components/AddClassroom";
 import AddCourse from "~/components/AddCourse";
@@ -11,12 +12,17 @@ import { Toaster } from "~/components/ui/sonner";
 import { Switch } from "~/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
+type TabValue = "teacher" | "subject" | "classroom" | "section";
+
 export default function Home() {
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get("tab") as TabValue) || "teacher";
+
   const [showAddCourse, setShowAddCourse] = useState(false);
 
   return (
     <div className="w-full min-h-screen flex justify-center items-start p-4">
-      <Tabs defaultValue="teacher" className="w-full max-w-2xl mt-5">
+      <Tabs defaultValue={initialTab} className="w-full max-w-2xl mt-5">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="teacher">Teacher</TabsTrigger>
           <TabsTrigger value="subject">Subject</TabsTrigger>
