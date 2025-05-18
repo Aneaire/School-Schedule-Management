@@ -1,18 +1,19 @@
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import {
+  classes,
   days,
   rooms,
   schedules,
+  sections,
   subjects,
   teachers,
   times,
 } from "~/lib/schema";
 import { db } from "~/lib/tursoDb";
 
-// Helper to parse time string like "09:00" to decimal hours (e.g., 9.5)
 function parseHour(time: string): number {
-  const [h, m] = time.split(":").map(Number);
+  const [h, m] = time.split(":" as const).map(Number);
   return h + m / 60;
 }
 
@@ -42,13 +43,11 @@ export async function POST(
 
     const endHour = startHour + duration / 60;
 
-    // Get dayId
     const dayRecord = await db
       .select({ dayId: days.dayId })
       .from(days)
       .where(eq(days.dayName, day));
     const dayId = dayRecord[0]?.dayId;
-
     if (!dayId) {
       return NextResponse.json(
         { error: "Invalid day provided" },
@@ -56,8 +55,51 @@ export async function POST(
       );
     }
 
+    const sectionRecord = await db
+      .select({
+        sectionName: sections.sectionName,
+        year: sections.year,
+        courseId: sections.courseId,
+      })
+      .from(sections)
+      .where(eq(sections.sectionId, sectionId));
+
+    const section = sectionRecord[0];
+    if (!section) {
+      return NextResponse.json(
+        { error: "Invalid section ID" },
+        { status: 400 }
+      );
+    }
+
+    const classResult = await db
+      .select({ classId: classes.classId })
+      .from(classes)
+      .where(
+        and(
+          eq(classes.section, section.sectionName),
+          eq(classes.year, section.year),
+          eq(classes.roomId, roomId),
+          eq(classes.courseId, section.courseId)
+        )
+      );
+
+    let classId = classResult[0]?.classId;
+    if (!classId) {
+      const [newClass] = await db
+        .insert(classes)
+        .values({
+          section: section.sectionName,
+          year: section.year,
+          roomId,
+          courseId: section.courseId,
+        })
+        .returning({ classId: classes.classId });
+
+      classId = newClass.classId;
+    }
+
     const conflictChecks = await Promise.all([
-      // Room schedules
       db
         .select({
           startTime: times.startTime,
@@ -71,7 +113,6 @@ export async function POST(
         .innerJoin(teachers, eq(schedules.teacherId, teachers.teacherId))
         .where(and(eq(schedules.roomId, roomId), eq(schedules.dayId, dayId))),
 
-      // Section schedules
       db
         .select({
           startTime: times.startTime,
@@ -87,7 +128,6 @@ export async function POST(
           and(eq(schedules.sectionId, sectionId), eq(schedules.dayId, dayId))
         ),
 
-      // Teacher schedules
       db
         .select({
           startTime: times.startTime,
@@ -105,7 +145,6 @@ export async function POST(
     ]);
 
     const [roomSchedules, sectionSchedules, teacherSchedules] = conflictChecks;
-
     const isOverlapping = (schedule: any) => {
       const existingStart = parseHour(schedule.startTime);
       const existingEnd = parseHour(schedule.endTime);
@@ -115,7 +154,7 @@ export async function POST(
     const roomConflicts = roomSchedules.filter(isOverlapping).map((c) => ({
       teacherName: c.teacherName,
       subjectName: c.subjectName,
-      roomName: "", // Already the selected room
+      roomName: "",
       conflictStartHour: c.startTime,
       conflictDuration: c.endTime,
     }));
@@ -125,15 +164,15 @@ export async function POST(
       .map((c: any) => ({
         teacherName: c.teacherName,
         subjectName: c.subjectName,
-        roomName: "", // optional
+        roomName: "",
         conflictStartHour: c.startTime,
         conflictDuration: c.endTime,
       }));
-    console.log("teacher schedules", teacherSchedules);
+
     const teacherConflicts = teacherSchedules
       .filter(isOverlapping)
       .map((c: any) => ({
-        teacherName: "", // You already know which teacher this is
+        teacherName: "",
         subjectName: c.subjectName,
         roomName: c.roomName,
         conflictStartHour: c.startTime,
@@ -164,7 +203,6 @@ export async function POST(
       );
     }
 
-    // No conflicts — proceed to insert
     const [newSchedule] = await db
       .insert(schedules)
       .values({
@@ -172,14 +210,13 @@ export async function POST(
         subjectId,
         roomId,
         sectionId,
-        classId: 1, // if needed or dynamic
+        classId,
         timeId: await getOrCreateTimeId(startHour, duration),
         dayId,
       })
       .returning();
 
     console.log("New schedule created:", newSchedule);
-
     return NextResponse.json(newSchedule, { status: 201 });
   } catch (error) {
     console.error("Error assigning subject:", error);
@@ -190,7 +227,6 @@ export async function POST(
   }
 }
 
-// Util: Reuse or create time slot
 async function getOrCreateTimeId(startHour: number, duration: number) {
   const startTime = `${String(startHour).padStart(2, "0")}:00`;
   const endHour = startHour + duration / 60;
