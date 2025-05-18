@@ -101,7 +101,6 @@ export default function ScheduleView({
     );
   }
 
-  console.log("Filtered Schedules:", filteredSchedules);
   return (
     <div className="max-w-md mx-auto bg-card rounded-lg border shadow-sm">
       <div className="p-4 border-b">

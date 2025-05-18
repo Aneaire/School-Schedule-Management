@@ -127,7 +127,7 @@ export default function AssignSubjectForm({
     defaultValues: {
       startHour: 7,
       duration: 60,
-      day: "Monday",
+      day: undefined,
     },
   });
 
@@ -194,7 +194,9 @@ export default function AssignSubjectForm({
           fetch("/api/rooms").then((res) => res.json()),
           fetch("/api/subjects").then((res) => res.json()),
           fetch("/api/sections").then((res) => res.json()),
-          fetch("/api/teachers/schedules").then((res) => res.json()),
+          fetch(
+            `/api/teachers/schedules?teacherId=${teacherId}&day=${selectedDay}`
+          ).then((res) => res.json()),
         ]);
 
         setRooms(roomsResponse);
@@ -248,6 +250,7 @@ export default function AssignSubjectForm({
 
   // Fetch teacher schedules for the selected day
   useEffect(() => {
+    console.log("bulshit", teacherId);
     if (teacherId && selectedDay) {
       fetch(`/api/teachers/schedules?teacherId=${teacherId}&day=${selectedDay}`)
         .then((res) => res.json())

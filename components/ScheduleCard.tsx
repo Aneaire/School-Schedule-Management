@@ -35,7 +35,7 @@ export default function ScheduleCard({ schedule }: ScheduleCardProps) {
       return res.json();
     },
   });
-  console.log("Room data:", room);
+
   return (
     <Card className="border hover:bg-accent/50 transition-colors">
       <CardContent className="px-3 py-2">

@@ -54,7 +54,6 @@ export default function Teacher() {
         const data = await res.json();
         if (res.ok) {
           setTeacher(data);
-          console.log("teacher", data);
         } else {
           console.error("Error:", data.error);
         }

@@ -17,16 +17,24 @@ export async function GET(request: Request) {
     const roomId = url.searchParams.get("roomId");
     const day = url.searchParams.get("day");
     const sectionId = url.searchParams.get("sectionId");
+    const teacherId = url.searchParams.get("teacherId"); // ✅ include this line
 
     const conditions = [];
+
     if (roomId) {
       conditions.push(eq(schedules.roomId, parseInt(roomId)));
     }
+
     if (day) {
       conditions.push(eq(days.dayName, day));
     }
+
     if (sectionId) {
       conditions.push(eq(schedules.sectionId, parseInt(sectionId)));
+    }
+
+    if (teacherId) {
+      conditions.push(eq(schedules.teacherId, parseInt(teacherId))); // ✅ include this condition
     }
 
     const teacherSchedules = await db
