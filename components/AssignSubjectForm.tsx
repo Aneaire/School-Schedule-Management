@@ -27,7 +27,6 @@ import {
   FormLabel,
   FormMessage,
 } from "~/components/ui/form";
-import { Input } from "~/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -41,7 +40,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
-import { formatTimeTo12Hour } from "~/lib/utils";
+
+import { formatHour, formatTimeTo12Hour, HOURS } from "~/utils/time";
 import ScheduleConflictDialog from "./ScheduleConflictDialog";
 
 type Conflict = {
@@ -49,7 +49,7 @@ type Conflict = {
   subjectName: string;
   roomName: string;
   conflictStartHour: string;
-  conflictDuration: string;
+  conflictEndHour: string;
 };
 
 type Conflicts = {
@@ -57,7 +57,6 @@ type Conflicts = {
   section: Conflict[];
 };
 
-const HOURS = Array.from({ length: 12 }, (_, i) => 7 + i); // 7 to 18 (removes 19/7pm)
 const DAYS = [
   "Monday",
   "Tuesday",
@@ -79,8 +78,11 @@ const assignSchema = z.object({
     .max(19, "Latest hour is 19"),
   duration: z
     .number({ invalid_type_error: "Duration is required" })
-    .min(15, "Minimum 15 minutes")
-    .max(720, "Maximum 12 hours"),
+    .min(30, "Minimum 30 minutes")
+    .max(300, "Maximum 5 hours")
+    .refine((val) => val % 30 === 0, {
+      message: "Duration must be in 30-minute increments",
+    }),
   sectionId: z.string().min(1, "Select a section"),
 });
 
@@ -90,10 +92,10 @@ type Room = { roomId: number; roomCode: string; roomName: string };
 type Section = { sectionId: number; sectionName: string; year: number };
 
 function formatHourTo12Hour(hour: number): string {
-  if (hour === 0) return "12:00 AM";
-  if (hour === 12) return "12:00 PM";
-  if (hour < 12) return `${hour}:00 AM`;
-  return `${hour - 12}:00 PM`;
+  const h = Math.floor(hour) % 12 || 12;
+  const minute = (hour % 1) * 60;
+  const ampm = hour < 12 || hour === 24 ? "AM" : "PM";
+  return `${h}:${minute < 10 ? "0" + minute : minute} ${ampm}`;
 }
 
 export default function AssignSubjectForm({
@@ -127,7 +129,7 @@ export default function AssignSubjectForm({
     defaultValues: {
       startHour: 7,
       duration: 60,
-      day: undefined,
+      day: "Monday",
     },
   });
 
@@ -469,7 +471,7 @@ export default function AssignSubjectForm({
                       </FormLabel>
                       <Select
                         value={field.value?.toString()}
-                        onValueChange={(v) => field.onChange(parseInt(v))}
+                        onValueChange={(v) => field.onChange(parseFloat(v))}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -479,7 +481,7 @@ export default function AssignSubjectForm({
                         <SelectContent>
                           {HOURS.map((hour) => (
                             <SelectItem key={hour} value={hour.toString()}>
-                              {formatHourTo12Hour(hour)}
+                              {formatHour(hour)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -511,18 +513,31 @@ export default function AssignSubjectForm({
                       </svg>
                       Duration (minutes)
                     </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        {...field}
-                        onChange={(e) =>
-                          field.onChange(parseInt(e.target.value))
-                        }
-                        placeholder="e.g., 60"
-                      />
-                    </FormControl>
+                    <Select
+                      value={field.value?.toString()}
+                      onValueChange={(v) => field.onChange(parseInt(v))}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select duration" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {[60, 90, 120, 150, 180, 210, 240, 270, 300].map(
+                          (minutes) => (
+                            <SelectItem
+                              key={minutes}
+                              value={minutes.toString()}
+                            >
+                              {minutes} minutes ({Math.floor(minutes / 60)}h{" "}
+                              {minutes % 60 === 0 ? "" : "30m"})
+                            </SelectItem>
+                          )
+                        )}
+                      </SelectContent>
+                    </Select>
                     <FormDescription className="text-xs">
-                      Enter a value between 15 and 720 minutes
+                      Select duration in 30-minute increments, up to 5 hours
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

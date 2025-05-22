@@ -11,11 +11,7 @@ import {
   times,
 } from "~/lib/schema";
 import { db } from "~/lib/tursoDb";
-
-function parseHour(time: string): number {
-  const [h, m] = time.split(":" as const).map(Number);
-  return h + m / 60;
-}
+import { formatHour, parseHour } from "~/utils/time";
 
 export async function POST(
   req: Request,
@@ -41,6 +37,16 @@ export async function POST(
       teacherId: number;
     } = body;
 
+    console.log("Received data:", {
+      subjectId,
+      roomId,
+      day,
+      startHour,
+      duration,
+      sectionId,
+      teacherId,
+    });
+
     const endHour = startHour + duration / 60;
 
     const dayRecord = await db
@@ -65,6 +71,7 @@ export async function POST(
       .where(eq(sections.sectionId, sectionId));
 
     const section = sectionRecord[0];
+    console.log("section", section);
     if (!section) {
       return NextResponse.json(
         { error: "Invalid section ID" },
@@ -150,13 +157,12 @@ export async function POST(
       const existingEnd = parseHour(schedule.endTime);
       return !(endHour <= existingStart || startHour >= existingEnd);
     };
-
     const roomConflicts = roomSchedules.filter(isOverlapping).map((c) => ({
       teacherName: c.teacherName,
       subjectName: c.subjectName,
       roomName: "",
       conflictStartHour: c.startTime,
-      conflictDuration: c.endTime,
+      conflictEndHour: c.endTime,
     }));
 
     const sectionConflicts = sectionSchedules
@@ -166,7 +172,7 @@ export async function POST(
         subjectName: c.subjectName,
         roomName: "",
         conflictStartHour: c.startTime,
-        conflictDuration: c.endTime,
+        conflictEndHour: c.endTime,
       }));
 
     const teacherConflicts = teacherSchedules
@@ -176,7 +182,7 @@ export async function POST(
         subjectName: c.subjectName,
         roomName: c.roomName,
         conflictStartHour: c.startTime,
-        conflictDuration: c.endTime,
+        conflictEndHour: c.endTime,
       }));
 
     if (
@@ -195,7 +201,7 @@ export async function POST(
               subjectName: c.subjectName,
               roomName: c.roomName,
               conflictStartHour: c.startTime,
-              conflictDuration: c.endTime,
+              conflictEndHour: c.endTime,
             })),
           },
         },
@@ -216,7 +222,6 @@ export async function POST(
       })
       .returning();
 
-    console.log("New schedule created:", newSchedule);
     return NextResponse.json(newSchedule, { status: 201 });
   } catch (error) {
     console.error("Error assigning subject:", error);
@@ -228,9 +233,9 @@ export async function POST(
 }
 
 async function getOrCreateTimeId(startHour: number, duration: number) {
-  const startTime = `${String(startHour).padStart(2, "0")}:00`;
+  const startTime = formatHour(startHour); // e.g., "07:30"
   const endHour = startHour + duration / 60;
-  const endTime = `${String(endHour).padStart(2, "0")}:00`;
+  const endTime = formatHour(endHour); // e.g., "09:00"
 
   const existing = await db
     .select({ timeId: times.timeId })

@@ -65,7 +65,7 @@ export default function Teacher() {
     };
     if (params.id) fetchTeacher();
   }, [params.id]);
-
+  console.log("teacher", teacher);
   const getInitials = (name: string) => {
     return name
       ? name

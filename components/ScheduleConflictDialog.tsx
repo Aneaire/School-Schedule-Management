@@ -8,21 +8,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
-import { formatTimeTo12Hour } from "~/lib/utils";
+import {
+  formatTimeTo12Hour,
+  formatTimeTo12Hour2,
+  parseHour,
+} from "~/utils/time";
 
 interface Conflict {
   teacherName: string;
   subjectName: string;
   roomName: string;
   conflictStartHour: string;
-  conflictDuration: string;
+  conflictEndHour: string;
 }
 
 interface TeacherSchedule {
   subjectName: string;
   roomName: string;
   conflictStartHour: string;
-  conflictDuration: string;
+  conflictEndHour: string;
 }
 
 interface Conflicts {
@@ -42,34 +46,33 @@ interface ScheduleConflictDialogProps {
   duration: number;
 }
 
-function parseHour(time: string): number {
-  const [h, m] = time.split(":").map(Number);
-  return h + m / 60;
-}
-
 function getSuggestedSlots(conflicts: Conflicts, duration: number): number[] {
   const allConflicts: Conflict[] = [
     ...conflicts.room,
     ...conflicts.section,
     ...(conflicts.teacher || []),
   ];
-
   const teacherTimes = conflicts.allTeacherSchedules || [];
 
   const conflictTimes = [...allConflicts, ...teacherTimes].map((conflict) => ({
     start: parseHour(conflict.conflictStartHour),
-    end: parseHour(conflict.conflictDuration),
+    end: parseHour(conflict.conflictEndHour),
   }));
 
   const suggestions: number[] = [];
   const durationHours = duration / 60;
-  for (let hour = 7; hour < 19; hour++) {
+
+  for (let hour = 7; hour <= 19 - durationHours; hour += 0.5) {
     const proposedEnd = hour + durationHours;
-    const isFree = conflictTimes.every(
-      (conflict) => proposedEnd <= conflict.start || hour >= conflict.end
+    const overlaps = conflictTimes.some(
+      (c) => !(proposedEnd <= c.start || hour >= c.end)
     );
-    if (isFree) suggestions.push(hour);
+
+    if (!overlaps) {
+      suggestions.push(hour);
+    }
   }
+
   return suggestions;
 }
 
@@ -83,12 +86,12 @@ export default function ScheduleConflictDialog({
   duration,
 }: ScheduleConflictDialogProps) {
   if (!conflicts) return null;
-
+  console.log("conflicts", conflicts);
   const hasRoomConflicts = conflicts.room.length > 0;
   const hasSectionConflicts = conflicts.section.length > 0;
   const hasTeacherConflicts = conflicts.teacher && conflicts.teacher.length > 0;
   const suggested = getSuggestedSlots(conflicts, duration);
-  console.log("teacher schedule", conflicts.teacher);
+  console.log("section schedule", conflicts.section);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -108,7 +111,7 @@ export default function ScheduleConflictDialog({
                 <div key={i} className="p-2 bg-muted/50 rounded-md">
                   <Badge>
                     {formatTimeTo12Hour(conflict.conflictStartHour)} -{" "}
-                    {formatTimeTo12Hour(conflict.conflictDuration)}
+                    {formatTimeTo12Hour(conflict.conflictEndHour)}
                   </Badge>
                   <p>
                     {conflict.subjectName} — {conflict.teacherName}
@@ -125,7 +128,7 @@ export default function ScheduleConflictDialog({
                 <div key={i} className="p-2 bg-muted/50 rounded-md">
                   <Badge>
                     {formatTimeTo12Hour(conflict.conflictStartHour)} -{" "}
-                    {formatTimeTo12Hour(conflict.conflictDuration)}
+                    {formatTimeTo12Hour(conflict.conflictEndHour)}
                   </Badge>
                   <p>
                     {conflict.subjectName} — {conflict.teacherName}
@@ -135,7 +138,7 @@ export default function ScheduleConflictDialog({
             </div>
           )}
 
-          {conflicts.allTeacherSchedules && (
+          {hasTeacherConflicts && conflicts.allTeacherSchedules && (
             <div>
               <h3 className="text-sm font-medium mb-2">
                 Teacher's Full Schedule (Today):
@@ -145,7 +148,7 @@ export default function ScheduleConflictDialog({
                   <div key={i} className="p-2 bg-muted/30 rounded-md">
                     <Badge>
                       {formatTimeTo12Hour(sched.conflictStartHour)} -{" "}
-                      {formatTimeTo12Hour(sched.conflictDuration)}
+                      {formatTimeTo12Hour(sched.conflictEndHour)}
                     </Badge>
                     <p>
                       {sched.subjectName} — Room: {sched.roomName}
@@ -171,7 +174,7 @@ export default function ScheduleConflictDialog({
                       onOpenChange(false);
                     }}
                   >
-                    {formatTimeTo12Hour(`${hour}:00`)}
+                    {formatTimeTo12Hour2(hour)}
                   </Button>
                 ))}
               </div>
