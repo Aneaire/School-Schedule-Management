@@ -11,6 +11,7 @@ import { Label } from "~/components/ui/label";
 import { Toaster } from "~/components/ui/sonner";
 import { Switch } from "~/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import QueryProvider from "~/lib/react-query/QueryProvider";
 
 type TabValue = "teacher" | "subject" | "classroom" | "section";
 
@@ -21,40 +22,42 @@ export default function Home() {
   const [showAddCourse, setShowAddCourse] = useState(false);
 
   return (
-    <div className="w-full min-h-screen flex justify-center items-start p-4">
-      <Tabs defaultValue={initialTab} className="w-full max-w-2xl mt-5">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="teacher">Teacher</TabsTrigger>
-          <TabsTrigger value="subject">Subject</TabsTrigger>
-          <TabsTrigger value="classroom">Classroom</TabsTrigger>
-          <TabsTrigger value="section">Section</TabsTrigger>
-        </TabsList>
+    <QueryProvider>
+      <div className="w-full min-h-screen flex justify-center items-start p-4">
+        <Tabs defaultValue={initialTab} className="w-full max-w-2xl mt-5">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="teacher">Teacher</TabsTrigger>
+            <TabsTrigger value="subject">Subject</TabsTrigger>
+            <TabsTrigger value="classroom">Classroom</TabsTrigger>
+            <TabsTrigger value="section">Section</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="teacher">
-          <AddTeacher />
-        </TabsContent>
-        <TabsContent value="subject">
-          <AddSubject />
-        </TabsContent>
-        <TabsContent value="classroom">
-          <AddClassroom />
-        </TabsContent>
-        <TabsContent value="section">
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2 mb-4">
-              <Switch
-                id="show-add-course"
-                checked={showAddCourse}
-                onCheckedChange={setShowAddCourse}
-              />
-              <Label htmlFor="show-add-course">Show Add Course</Label>
+          <TabsContent value="teacher">
+            <AddTeacher />
+          </TabsContent>
+          <TabsContent value="subject">
+            <AddSubject />
+          </TabsContent>
+          <TabsContent value="classroom">
+            <AddClassroom />
+          </TabsContent>
+          <TabsContent value="section">
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2 mb-4">
+                <Switch
+                  id="show-add-course"
+                  checked={showAddCourse}
+                  onCheckedChange={setShowAddCourse}
+                />
+                <Label htmlFor="show-add-course">Show Add Course</Label>
+              </div>
+              <AddSection />
+              {showAddCourse && <AddCourse />}
             </div>
-            <AddSection />
-            {showAddCourse && <AddCourse />}
-          </div>
-        </TabsContent>
-      </Tabs>
-      <Toaster />
-    </div>
+          </TabsContent>
+        </Tabs>
+        <Toaster />
+      </div>
+    </QueryProvider>
   );
 }

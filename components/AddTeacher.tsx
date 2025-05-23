@@ -2,7 +2,8 @@
 
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -26,11 +27,11 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export default function AddTeacher() {
-  const [subjectOptions, setSubjectOptions] = useState<Subject[]>([]);
   const [animationParent] = useAutoAnimate();
-  const [isUploading, setIsUploading] = useState(false);
   const [imageSelected, setImageSelected] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const queryClient = useQueryClient();
 
   const {
     register,
@@ -48,42 +49,52 @@ export default function AddTeacher() {
     },
   });
 
-  useEffect(() => {
-    const fetchSubjects = async () => {
+  // Fetch subjects using useQuery with options object
+  const {
+    data: subjectOptions = [],
+    isLoading: subjectsLoading,
+    error: subjectsError,
+    refetch: refetchSubjects,
+  } = useQuery<Subject[], Error>({
+    queryKey: ["subjects"],
+    queryFn: async () => {
       const res = await fetch("/api/subjects");
-      const data = await res.json();
-      setSubjectOptions(data);
-    };
+      if (!res.ok) throw new Error("Failed to fetch subjects");
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    retry: 2,
+    refetchOnWindowFocus: false,
+  });
 
-    fetchSubjects();
-  }, []);
-  console.log(isUploading, imageSelected);
-  const onSubmit = async (data: FormData) => {
-    setIsUploading(true);
-    setSuccessMessage(null);
-    try {
+  // Mutation for adding a teacher
+  const { mutate, isPending: isUploading } = useMutation({
+    mutationFn: async (data: FormData) => {
       const res = await fetch("/api/teachers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-
       const result = await res.json();
-
       if (!res.ok) {
-        toast.error(result.error || "Failed to add teacher");
-        return;
+        throw new Error(result.error || "Failed to add teacher");
       }
-
+      return result;
+    },
+    onSuccess: () => {
       toast.success("Teacher added successfully");
       setSuccessMessage("Teacher has been added successfully!");
       reset();
-    } catch (err) {
-      console.error("Error submitting teacher:", err);
-      toast.error("Failed to add teacher");
-    } finally {
-      setIsUploading(false);
-    }
+      queryClient.invalidateQueries({ queryKey: ["teachers"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to add teacher");
+    },
+  });
+
+  const onSubmit = (data: FormData) => {
+    setSuccessMessage(null);
+    mutate(data);
   };
 
   return (
@@ -104,13 +115,11 @@ export default function AddTeacher() {
             setImageSelected(false);
           }}
           onUploadError={(error: Error) => {
-            console.log("Upload failed:", error);
+            console.error("Upload failed:", error);
             toast.error("Failed to upload image");
           }}
           onChange={(files) => {
-            if (files.length > 0) {
-              setImageSelected(true);
-            }
+            setImageSelected(files.length > 0);
           }}
         />
       </div>
@@ -147,9 +156,10 @@ export default function AddTeacher() {
             {...register("majorSubject")}
             className="w-full p-2 border rounded-md bg-white text-black dark:bg-gray-800 dark:text-white"
             defaultValue=""
+            disabled={subjectsLoading}
           >
             <option value="" disabled>
-              Select one subject
+              {subjectsLoading ? "Loading subjects..." : "Select one subject"}
             </option>
             {subjectOptions.map((subject) => (
               <option key={subject.subjectId} value={subject.subjectName}>
@@ -160,6 +170,11 @@ export default function AddTeacher() {
           {errors.majorSubject && (
             <p className="text-red-500 text-sm">
               {errors.majorSubject.message}
+            </p>
+          )}
+          {subjectsError && (
+            <p className="text-red-500 text-sm mt-1">
+              Failed to load subjects: {subjectsError.message}
             </p>
           )}
         </div>

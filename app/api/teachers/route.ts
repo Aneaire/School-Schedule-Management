@@ -57,3 +57,24 @@ export async function GET(request: Request) {
     );
   }
 }
+
+export async function POST(request: Request) {
+  try {
+    const { teacherName, email, majorSubject, imageUrl } = await request.json();
+
+    const newTeacher = await db.insert(teachers).values({
+      teacherName,
+      email,
+      majorSubject,
+      imageUrl,
+    });
+
+    return NextResponse.json(newTeacher);
+  } catch (error) {
+    console.error("Error creating teacher:", error);
+    return NextResponse.json(
+      { error: "Failed to create teacher" },
+      { status: 500 }
+    );
+  }
+}

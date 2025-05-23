@@ -1,36 +1,50 @@
 import { execSync } from "child_process";
-import fs from "fs";
-import path from "path";
+import { db } from "~/lib/tursoDb";
 
-async function main() {
+async function resetTursoDatabase() {
   try {
-    console.log("Starting database reset process...");
+    console.log("Starting Turso database reset...");
 
-    // Delete the SQLite database file
-    const dbPath = path.join(process.cwd(), "sqlite.db");
-    if (fs.existsSync(dbPath)) {
-      console.log("Deleting existing database...");
-      fs.unlinkSync(dbPath);
-      console.log("Database deleted successfully!");
-    } else {
-      console.log("No existing database found.");
+    // Disable foreign key checks
+    await db.run(`PRAGMA foreign_keys = OFF;`);
+
+    const tables = [
+      "schedules",
+      "classes",
+      "sections",
+      "courses",
+      "days",
+      "rooms",
+      "times",
+      "subjects",
+      "teachers",
+    ];
+
+    for (const table of tables) {
+      console.log(`Dropping table if exists: ${table}`);
+      await db.run(`DROP TABLE IF EXISTS ${table};`);
     }
 
-    // Run database migrations
-    console.log("\nRunning database migrations...");
+    // Re-enable foreign key checks
+    await db.run(`PRAGMA foreign_keys = ON;`);
+
+    console.log("All tables dropped successfully.");
+
+    // Run migrations
+    console.log("Running migrations...");
     execSync("bun run db:migrate", { stdio: "inherit" });
-    console.log("Migrations completed successfully!");
+    console.log("Migrations completed.");
 
-    // Run all seed scripts
-    console.log("\nRunning seed scripts...");
+    // Run seed scripts
+    console.log("Running seed scripts...");
     execSync("bun run seed:markup:data", { stdio: "inherit" });
-    console.log("Seeding completed successfully!");
+    console.log("Seeding completed.");
 
-    console.log("\nDatabase reset and reseed completed successfully!");
+    console.log("Turso database reset and reseed completed successfully!");
   } catch (error) {
-    console.error("Error during database reset:", error);
+    console.error("Error resetting Turso database:", error);
     process.exit(1);
   }
 }
 
-main();
+resetTursoDatabase();
