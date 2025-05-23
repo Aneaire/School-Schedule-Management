@@ -5,7 +5,15 @@ import { db } from "~/lib/tursoDb";
 
 export async function GET() {
   try {
-    const allSections = await db.select().from(sections);
+    const allSections = await db
+      .select({
+        sectionId: sections.sectionId,
+        sectionName: sections.sectionName,
+        year: sections.year,
+        courseId: sections.courseId,
+      })
+      .from(sections);
+
     return new Response(JSON.stringify(allSections), {
       headers: { "Content-Type": "application/json" },
     });

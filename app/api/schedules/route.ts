@@ -35,6 +35,7 @@ export async function GET(req: Request) {
         endTime: times.endTime,
         dayName: days.dayName,
         teacherName: teachers.teacherName,
+        roomCode: rooms.roomCode,
         ...(roomId ? { sectionName: sections.sectionName } : {}),
         ...(sectionId ? { roomName: rooms.roomName } : {}),
       })

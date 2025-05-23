@@ -1,7 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
 import { Clock, MapPin } from "lucide-react";
 import { Badge } from "~/components/ui/badge";
 import { Card, CardContent } from "~/components/ui/card";
+import { formatTimeTo12Hour } from "~/utils/time";
 
 type Schedule = {
   scheduleId: number;
@@ -10,6 +10,7 @@ type Schedule = {
   startTime: string;
   endTime: string;
   roomId: number;
+  roomCode: string;
   teacherName?: string;
   sectionName: string;
   year: number;
@@ -27,15 +28,6 @@ function getDuration(startTime: string, endTime: string) {
 }
 
 export default function ScheduleCard({ schedule }: ScheduleCardProps) {
-  const { data: room, isLoading: loadingRoom } = useQuery({
-    queryKey: ["room", schedule.roomId],
-    queryFn: async () => {
-      const res = await fetch(`/api/rooms/${schedule.roomId}`);
-      if (!res.ok) throw new Error("Failed to fetch room");
-      return res.json();
-    },
-  });
-
   return (
     <Card className="border hover:bg-accent/50 transition-colors">
       <CardContent className="px-3 py-2">
@@ -56,17 +48,15 @@ export default function ScheduleCard({ schedule }: ScheduleCardProps) {
               <div className="flex items-center">
                 <Clock className="w-3 h-3 mr-1" />
                 <span className="font-mono">
-                  {schedule.startTime} - {schedule.endTime}
+                  {formatTimeTo12Hour(schedule.startTime)} -{" "}
+                  {formatTimeTo12Hour(schedule.endTime)}
                 </span>
               </div>
               <span className="text-border">•</span>
               <div className="flex items-center">
                 <MapPin className="w-3 h-3 mr-1" />
-                {loadingRoom ? (
-                  <span className="italic">Loading...</span>
-                ) : (
-                  <span className="truncate">{room?.roomCode}</span>
-                )}
+
+                <span className="truncate">{schedule.roomCode}</span>
               </div>
             </div>
             {schedule.teacherName && (

@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, Loader2, Search } from "lucide-react";
+import { Calendar, Loader2, Search, Table } from "lucide-react";
 import { useState } from "react";
+import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
+
 import {
   Select,
   SelectContent,
@@ -11,6 +13,7 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import ScheduleCard from "./ScheduleCard";
+import ScheduleDialogTable from "./ScheduleDialogTable";
 
 type Schedule = {
   scheduleId: number;
@@ -40,6 +43,7 @@ export default function ScheduleView({
 }: ScheduleViewProps) {
   const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [openDialog, setOpenDialog] = useState(false);
 
   const { data: schedules = initialSchedules, isLoading } = useQuery({
     queryKey: ["schedules", teacherId],
@@ -102,57 +106,73 @@ export default function ScheduleView({
   }
 
   return (
-    <div className="max-w-md mx-auto bg-card rounded-lg border shadow-sm">
-      <div className="p-4 border-b">
-        <h2 className="text-lg font-semibold flex items-center">
-          <Calendar className="w-5 h-5 mr-2 text-primary" />
-          Schedule View
-        </h2>
-      </div>
-
-      <div className="p-4 space-y-4">
-        {/* Search and filter controls */}
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-            <Input
-              placeholder="Search schedules..."
-              className="pl-8"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <Select value={filter} onValueChange={setFilter}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Filter" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Days</SelectItem>
-              <SelectItem value="monday">Monday</SelectItem>
-              <SelectItem value="tuesday">Tuesday</SelectItem>
-              <SelectItem value="wednesday">Wednesday</SelectItem>
-              <SelectItem value="thursday">Thursday</SelectItem>
-              <SelectItem value="friday">Friday</SelectItem>
-              <SelectItem value="saturday">Saturday</SelectItem>
-              <SelectItem value="sunday">Sunday</SelectItem>
-            </SelectContent>
-          </Select>
+    <>
+      <div className="max-w-md mx-auto bg-card rounded-lg border shadow-sm">
+        <div className="p-4 border-b">
+          <h2 className="text-lg font-semibold flex items-center">
+            <Calendar className="w-5 h-5 mr-2 text-primary" />
+            Schedule View
+          </h2>
         </div>
 
-        {/* Schedule list */}
-        <div className="space-y-3 max-h-72 overflow-y-auto">
-          {filteredSchedules.length > 0 ? (
-            filteredSchedules.map((schedule: any) => (
-              <ScheduleCard key={schedule.scheduleId} schedule={schedule} />
-            ))
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Calendar className="w-10 h-10 mx-auto mb-2 text-muted-foreground/70" />
-              <p className="text-sm">No schedules found</p>
+        <div className="p-4 space-y-4">
+          {/* Search and filter controls */}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Search schedules..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-          )}
+            <Select value={filter} onValueChange={setFilter}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Filter" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Days</SelectItem>
+                <SelectItem value="monday">Monday</SelectItem>
+                <SelectItem value="tuesday">Tuesday</SelectItem>
+                <SelectItem value="wednesday">Wednesday</SelectItem>
+                <SelectItem value="thursday">Thursday</SelectItem>
+                <SelectItem value="friday">Friday</SelectItem>
+                <SelectItem value="saturday">Saturday</SelectItem>
+                <SelectItem value="sunday">Sunday</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button
+            variant="outline"
+            className="w-full justify-start"
+            onClick={() => setOpenDialog(true)}
+          >
+            <Table className="w-4 h-4 mr-2" />
+            View Weekly Table
+          </Button>
+
+          {/* Schedule list */}
+          <div className="space-y-3 max-h-72 overflow-y-auto">
+            {filteredSchedules.length > 0 ? (
+              filteredSchedules.map((schedule: any) => (
+                <ScheduleCard key={schedule.scheduleId} schedule={schedule} />
+              ))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Calendar className="w-10 h-10 mx-auto mb-2 text-muted-foreground/70" />
+                <p className="text-sm">No schedules found</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+      <ScheduleDialogTable
+        open={openDialog}
+        onOpenChange={setOpenDialog}
+        schedules={schedules}
+      />
+    </>
   );
 }

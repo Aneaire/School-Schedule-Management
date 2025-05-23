@@ -43,6 +43,7 @@ export async function GET(
         endTime: times.endTime,
         roomId: schedules.roomId,
         roomName: rooms.roomName,
+        roomCode: rooms.roomCode,
         sectionId: schedules.sectionId,
         sectionName: sections.sectionName,
         year: sections.year,

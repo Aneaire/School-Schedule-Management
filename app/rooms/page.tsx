@@ -1,7 +1,16 @@
 "use client";
-import { Book, Calendar, Clock, Search, Sparkles, User } from "lucide-react";
+import {
+  Book,
+  Calendar,
+  Clock,
+  LayoutGrid,
+  Search,
+  Sparkles,
+  User,
+} from "lucide-react"; // Import LayoutGrid
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import ScheduleDialogTable from "~/components/ScheduleDialogTable";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
@@ -15,6 +24,8 @@ import {
 import { Input } from "~/components/ui/input";
 import { Skeleton } from "~/components/ui/skeleton";
 
+// Import the ScheduleDialogTable component
+
 interface Room {
   roomId: number;
   roomCode: string;
@@ -22,11 +33,14 @@ interface Room {
 }
 
 interface Schedule {
+  scheduleId?: number; // Add scheduleId if returned by your API
   subjectName: string;
   startTime: string;
   endTime: string;
   dayName: string;
-  teacherName: string;
+  teacherName: string; // Ensure this matches the API response
+  roomCode: string; // Ensure this matches the API response (likely roomName from your schema)
+  sectionName?: string; // Add if sectionName is included in the schedules fetched by room
 }
 
 const RoomsPage = () => {
@@ -35,6 +49,8 @@ const RoomsPage = () => {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+  // New state to control the ScheduleDialogTable visibility
+  const [showTableDialog, setShowTableDialog] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDialogLoading, setIsDialogLoading] = useState<boolean>(false);
 
@@ -57,6 +73,7 @@ const RoomsPage = () => {
       setIsDialogLoading(true);
       setDialogOpen(true);
       setSelectedRoom(room);
+      // API call now filters by roomId
       const res = await fetch(`/api/schedules?roomId=${room.roomId}`);
       const data = await res.json();
       setSchedules(data);
@@ -101,15 +118,22 @@ const RoomsPage = () => {
 
   const groupedSchedules = groupSchedulesByDay();
 
+  // Function to close the main dialog and open the table dialog
+  const handleViewTableClick = () => {
+    setDialogOpen(false); // Close the list view dialog
+    setShowTableDialog(true); // Open the table view dialog
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-950 text-gray-100">
       <main className="flex-1 container mx-auto px-6 pt-3 pb-1">
+        {/* ... (rest of your main content - search, add button, rooms list) ... */}
         <div className="mb-4 max-w-md ml-auto">
           <div className="sm:flex hidden items-center gap-2">
             <div className="relative w-full max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
-                placeholder="Search sections..."
+                placeholder="Search rooms..." // Updated placeholder
                 className="w-full bg-gray-800 border-gray-700 pl-10"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -125,13 +149,14 @@ const RoomsPage = () => {
             <div className="relative w-full flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
-                placeholder="Search sections..."
+                placeholder="Search rooms..." // Updated placeholder
                 className="w-full bg-gray-800 border-gray-700 pl-10"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Link href="/add-section">
+            {/* Assuming this link is for adding a room now */}
+            <Link href="/additional?tab=classroom">
               <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                 +
               </Button>
@@ -155,6 +180,14 @@ const RoomsPage = () => {
           <div className="text-center py-16 text-gray-400">
             <Book className="mx-auto h-12 w-12 mb-4 opacity-30" />
             <h3 className="text-xl font-medium">No rooms found</h3>
+            {search && (
+              <Button
+                className="mt-4 bg-gray-700 hover:bg-gray-600 text-white"
+                onClick={() => setSearch("")}
+              >
+                Clear Search
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -193,12 +226,16 @@ const RoomsPage = () => {
         )}
       </main>
 
+      {/* Main Dialog for List View */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="bg-gray-900 border-gray-700 text-gray-100 sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-gray-100">
-              {selectedRoom?.roomName}
-            </DialogTitle>
+            <div className="flex items-center">
+              <DialogTitle className="text-2xl font-bold text-gray-100">
+                {selectedRoom?.roomName}
+              </DialogTitle>
+            </div>
+
             <div className="mt-2">
               <Badge className="bg-gray-700 text-gray-300">
                 Code: {selectedRoom?.roomCode}
@@ -241,6 +278,7 @@ const RoomsPage = () => {
                           </div>
                           <div className="flex items-center text-sm text-gray-400">
                             <User className="h-4 w-4 mr-2 text-gray-500" />
+                            {/* Display teacher name */}
                             {schedule.teacherName}
                           </div>
                         </div>
@@ -254,14 +292,22 @@ const RoomsPage = () => {
 
           <DialogFooter className="mt-6">
             <Button
-              className="bg-purple-600 hover:bg-purple-700"
-              onClick={() => setDialogOpen(false)}
+              onClick={handleViewTableClick}
+              className="text-gray-200 bg-blue-700 hover:bg-blue-600"
             >
-              Close
+              <p className="hidden md:block font-medium">View Timetable</p>
+              <LayoutGrid className="h-5 w-5" />
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Schedule Table Dialog */}
+      <ScheduleDialogTable
+        schedules={schedules as any} // Pass the fetched schedules
+        open={showTableDialog} // Control visibility with new state
+        onOpenChange={setShowTableDialog} // Allow closing the table dialog
+      />
 
       <footer className="border-t border-gray-800 py-6 bg-gray-900">
         <div className="container mx-auto px-6 text-center text-gray-400 text-sm">

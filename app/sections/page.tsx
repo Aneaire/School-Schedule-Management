@@ -5,6 +5,7 @@ import {
   Bookmark,
   Calendar,
   Clock,
+  LayoutGrid,
   Search,
   Sparkles,
   User,
@@ -12,6 +13,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import ScheduleDialogTable from "~/components/ScheduleDialogTable";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
@@ -24,6 +26,8 @@ import {
 } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
 import { Skeleton } from "~/components/ui/skeleton";
+
+// Import the ScheduleDialogTable component
 
 interface Section {
   sectionId: number;
@@ -38,6 +42,7 @@ interface Schedule {
   endTime: string;
   dayName: string;
   teacherName: string;
+  roomCode: string;
 }
 
 const SectionsPage = () => {
@@ -46,11 +51,14 @@ const SectionsPage = () => {
   const [selectedSection, setSelectedSection] = useState<Section | null>(null);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+  // New state to control the ScheduleDialogTable visibility
+  const [showTableDialog, setShowTableDialog] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDialogLoading, setIsDialogLoading] = useState<boolean>(false);
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const router = useRouter();
   const [animationParent] = useAutoAnimate();
+
   useEffect(() => {
     setIsLoading(true);
     fetch("/api/sections")
@@ -118,9 +126,16 @@ const SectionsPage = () => {
 
   const groupedSchedules = groupSchedulesByDay();
 
+  // Function to close the main dialog and open the table dialog
+  const handleViewTableClick = () => {
+    setDialogOpen(false); // Close the list view dialog
+    setShowTableDialog(true); // Open the table view dialog
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-950 text-gray-100">
       <main className="flex-1 container mx-auto px-6 pt-3 pb-1">
+        {/* ... (rest of your main content - search, year filters, sections list) ... */}
         <div className="mb-4 max-w-md ml-auto">
           <div className="sm:flex hidden items-center gap-2">
             <div className="relative w-full max-w-md">
@@ -252,13 +267,15 @@ const SectionsPage = () => {
         )}
       </main>
 
+      {/* Main Dialog for List View */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="bg-gray-900 border-gray-700 text-gray-100 sm:max-w-2xl">
           <DialogHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex items-center">
               <DialogTitle className="text-2xl font-bold text-gray-100">
                 {selectedSection?.sectionName}
               </DialogTitle>
+              {/* Button to open the table view */}
             </div>
             <div className="flex gap-2 mt-2">
               <Badge className="bg-gray-700 text-gray-300">
@@ -298,8 +315,11 @@ const SectionsPage = () => {
                         key={idx}
                         className="bg-gray-800 border border-gray-700 rounded-lg p-4 hover:border-purple-500 transition-all"
                       >
-                        <h4 className="text-lg font-medium text-purple-400">
-                          {schedule.subjectName}
+                        <h4 className="text-lg font-medium text-purple-400 flex items-center gap-2">
+                          <p>{schedule.subjectName} </p>
+                          <Badge variant={"outline"} className="text-xs">
+                            {schedule.roomCode}
+                          </Badge>
                         </h4>
                         <div className="mt-2 grid grid-cols-2 gap-2">
                           <div className="flex items-center text-sm text-gray-400">
@@ -319,16 +339,24 @@ const SectionsPage = () => {
             </div>
           )}
 
-          <DialogFooter className="mt-6">
+          <DialogFooter className="mt-6 flex justify-between w-full">
             <Button
-              className="bg-purple-600 hover:bg-purple-700"
-              onClick={() => setDialogOpen(false)}
+              onClick={handleViewTableClick}
+              className="text-gray-200 bg-blue-700 hover:bg-blue-600"
             >
-              Close
+              <p className="hidden md:block font-medium">View Timetable</p>
+              <LayoutGrid className="h-5 w-5" />
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Schedule Table Dialog */}
+      <ScheduleDialogTable
+        schedules={schedules as any} // Pass the fetched schedules
+        open={showTableDialog} // Control visibility with new state
+        onOpenChange={setShowTableDialog} // Allow closing the table dialog
+      />
 
       <footer className="border-t border-gray-800 py-6 bg-gray-900">
         <div className="container mx-auto px-6 text-center text-gray-400 text-sm">
