@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, Loader2, Search, Table } from "lucide-react";
+import { Calendar, Download, Loader2, Search, Table } from "lucide-react"; // Import Download icon
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
@@ -13,28 +13,30 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import ScheduleCard from "./ScheduleCard";
-import ScheduleDialogTable from "./ScheduleDialogTable";
+import ScheduleDialogTable from "./ScheduleDialogTable"; // Assuming this is in the same directory or accessible path
 
+// Define the Schedule interface (consistent with API response)
 type Schedule = {
   scheduleId: number;
-  subjectId: number;
+  subjectId: number; // Include subjectId as it might be useful
   subjectName: string;
-  dayId: number;
+  dayId: number; // Include dayId
   dayName: string;
-  timeId: number;
+  timeId: number; // Include timeId
   startTime: string;
   endTime: string;
-  roomId: number;
-  roomName: string;
-  teacherName?: string;
-  sectionId: number;
-  sectionName: string;
-  year: number;
+  roomId: number; // Include roomId
+  roomCode: string; // Ensure API returns roomCode
+  roomName: string; // Ensure API returns roomName
+  teacherName: string; // Ensure API returns teacherName
+  sectionId: number; // Include sectionId
+  sectionName: string; // Ensure API returns sectionName
+  year: number; // Include year
 };
 
 interface ScheduleViewProps {
   teacherId: number;
-  initialSchedules?: any[];
+  initialSchedules?: Schedule[]; // Use the defined Schedule type
 }
 
 export default function ScheduleView({
@@ -45,22 +47,28 @@ export default function ScheduleView({
   const [searchQuery, setSearchQuery] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
 
-  const { data: schedules = initialSchedules, isLoading } = useQuery({
+  // Use the Schedule type for the query data
+  const { data: schedules = initialSchedules, isLoading } = useQuery<
+    Schedule[]
+  >({
     queryKey: ["schedules", teacherId],
     queryFn: async () => {
       const res = await fetch(`/api/teachers/${teacherId}`);
       if (!res.ok) {
-        throw new Error("Failed to fetch schedules");
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to fetch schedules");
       }
       const data = await res.json();
-      return data.schedules;
+      // Ensure the fetched data matches the Schedule type structure
+      return data.schedules as Schedule[];
     },
     initialData: initialSchedules,
   });
 
   // Filter and search logic
   const filteredSchedules =
-    schedules?.filter((schedule: any) => {
+    schedules?.filter((schedule: Schedule) => {
+      // Use Schedule type
       const matchesSearch =
         searchQuery === "" ||
         schedule.subjectName
@@ -78,8 +86,9 @@ export default function ScheduleView({
       return matchesSearch && matchesFilter;
     }) || [];
 
-  // Calculate duration in minutes
-  const getDuration = (startTime: any, endTime: any) => {
+  // Calculate duration in minutes (keeping this helper)
+  const getDuration = (startTime: string, endTime: string): number => {
+    // Use string types
     const [startHour, startMin] = startTime.split(":").map(Number);
     const [endHour, endMin] = endTime.split(":").map(Number);
 
@@ -87,6 +96,18 @@ export default function ScheduleView({
     const endMinutes = endHour * 60 + endMin;
 
     return endMinutes - startMinutes;
+  };
+
+  // Function to handle the Excel download
+  const handleDownloadExcel = () => {
+    if (teacherId) {
+      // Call the backend API endpoint for exporting Excel with the teacher ID
+      // Note: You might need to update your /api/export/schedules endpoint
+      // to accept teacherId as a query parameter and filter accordingly.
+      // As of our last implementation, it filters by sectionId or roomId.
+      // Let's assume you update the backend to handle teacherId.
+      window.open(`/api/export/schedules?teacherId=${teacherId}`, "_blank");
+    }
   };
 
   if (isLoading) {
@@ -97,7 +118,8 @@ export default function ScheduleView({
     );
   }
 
-  if (!schedules || schedules.length === 0) {
+  // Use type assertion for schedules in the check below
+  if (!schedules || (schedules as Schedule[]).length === 0) {
     return (
       <Card className="p-4 text-center text-muted-foreground">
         No schedules found
@@ -108,11 +130,23 @@ export default function ScheduleView({
   return (
     <>
       <div className="max-w-md mx-auto bg-card rounded-lg border shadow-sm">
-        <div className="p-4 border-b">
+        <div className="p-4 border-b flex justify-between items-center">
+          {" "}
+          {/* Added flex layout */}
           <h2 className="text-lg font-semibold flex items-center">
             <Calendar className="w-5 h-5 mr-2 text-primary" />
             Schedule View
           </h2>
+          {/* Download as Excel Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleDownloadExcel} // Call the new handler
+            className="text-gray-500 hover:text-green-500"
+            aria-label="Download Schedule as Excel"
+          >
+            <Download className="h-5 w-5" />
+          </Button>
         </div>
 
         <div className="p-4 space-y-4">
@@ -156,9 +190,14 @@ export default function ScheduleView({
           {/* Schedule list */}
           <div className="space-y-3 max-h-72 overflow-y-auto">
             {filteredSchedules.length > 0 ? (
-              filteredSchedules.map((schedule: any) => (
-                <ScheduleCard key={schedule.scheduleId} schedule={schedule} />
-              ))
+              filteredSchedules.map(
+                (
+                  schedule: Schedule // Use Schedule type
+                ) => (
+                  // Assuming ScheduleCard expects a prop named 'schedule' of type Schedule
+                  <ScheduleCard key={schedule.scheduleId} schedule={schedule} />
+                )
+              )
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 <Calendar className="w-10 h-10 mx-auto mb-2 text-muted-foreground/70" />
@@ -168,10 +207,11 @@ export default function ScheduleView({
           </div>
         </div>
       </div>
+      {/* Pass schedules with the defined type */}
       <ScheduleDialogTable
         open={openDialog}
         onOpenChange={setOpenDialog}
-        schedules={schedules}
+        schedules={schedules as Schedule[]} // Assert type
       />
     </>
   );

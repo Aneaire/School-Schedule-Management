@@ -41,7 +41,7 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 
-import { formatHour, formatTimeTo12Hour, HOURS } from "~/utils/time";
+import { formatTimeTo12Hour, formatTimeTo12Hour2, HOURS } from "~/utils/time";
 import ScheduleConflictDialog from "./ScheduleConflictDialog";
 
 type Conflict = {
@@ -127,6 +127,9 @@ export default function AssignSubjectForm({
   const form = useForm<AssignFormData>({
     resolver: zodResolver(assignSchema),
     defaultValues: {
+      roomId: "",
+      subjectId: "",
+      sectionId: "",
       startHour: 7,
       duration: 60,
       day: "Monday",
@@ -481,7 +484,7 @@ export default function AssignSubjectForm({
                         <SelectContent>
                           {HOURS.map((hour) => (
                             <SelectItem key={hour} value={hour.toString()}>
-                              {formatHour(hour)}
+                              {formatTimeTo12Hour2(hour)}
                             </SelectItem>
                           ))}
                         </SelectContent>
