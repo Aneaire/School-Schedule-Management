@@ -11,7 +11,23 @@ import {
   times,
 } from "~/lib/schema";
 import { db } from "~/lib/tursoDb";
-import { formatHour, parseHour } from "~/utils/time";
+import { formatHour } from "~/utils/time";
+
+// Helper to parse "HH:MM" → decimal hours
+function parseHour(time: string): number {
+  const [h, m] = time.split(":").map(Number);
+  return h + m / 60;
+}
+
+// Check if two time blocks overlap
+function isOverlapping(
+  start1: number,
+  end1: number,
+  start2: number,
+  end2: number
+) {
+  return start1 < end2 && start2 < end1;
+}
 
 export async function POST(
   req: Request,
@@ -37,16 +53,6 @@ export async function POST(
       teacherId: number;
     } = body;
 
-    console.log("Received data:", {
-      subjectId,
-      roomId,
-      day,
-      startHour,
-      duration,
-      sectionId,
-      teacherId,
-    });
-
     const endHour = startHour + duration / 60;
 
     const dayRecord = await db
@@ -69,9 +75,7 @@ export async function POST(
       })
       .from(sections)
       .where(eq(sections.sectionId, sectionId));
-
     const section = sectionRecord[0];
-    console.log("section", section);
     if (!section) {
       return NextResponse.json(
         { error: "Invalid section ID" },
@@ -90,7 +94,6 @@ export async function POST(
           eq(classes.courseId, section.courseId)
         )
       );
-
     let classId = classResult[0]?.classId;
     if (!classId) {
       const [newClass] = await db
@@ -102,7 +105,6 @@ export async function POST(
           courseId: section.courseId,
         })
         .returning({ classId: classes.classId });
-
       classId = newClass.classId;
     }
 
@@ -152,32 +154,70 @@ export async function POST(
     ]);
 
     const [roomSchedules, sectionSchedules, teacherSchedules] = conflictChecks;
-    const isOverlapping = (schedule: any) => {
-      const existingStart = parseHour(schedule.startTime);
-      const existingEnd = parseHour(schedule.endTime);
-      return !(endHour <= existingStart || startHour >= existingEnd);
-    };
-    const roomConflicts = roomSchedules.filter(isOverlapping).map((c) => ({
+
+    const roomSchedulesResponse = roomSchedules.map((c: any) => ({
       teacherName: c.teacherName,
       subjectName: c.subjectName,
-      roomName: "",
+      roomName: c.roomName,
       conflictStartHour: c.startTime,
       conflictEndHour: c.endTime,
     }));
 
-    const sectionConflicts = sectionSchedules
-      .filter(isOverlapping)
-      .map((c: any) => ({
+    const roomConflicts = roomSchedules
+      .filter((c) =>
+        isOverlapping(
+          startHour,
+          endHour,
+          parseHour(c.startTime),
+          parseHour(c.endTime)
+        )
+      )
+      .map((c) => ({
         teacherName: c.teacherName,
         subjectName: c.subjectName,
         roomName: "",
         conflictStartHour: c.startTime,
         conflictEndHour: c.endTime,
       }));
-
+    const sectionSchedulesResponse = sectionSchedules.map((c: any) => ({
+      teacherName: c.teacherName,
+      subjectName: c.subjectName,
+      roomName: "",
+      conflictStartHour: c.startTime,
+      conflictEndHour: c.endTime,
+    }));
+    const sectionConflicts = sectionSchedules
+      .filter((c) =>
+        isOverlapping(
+          startHour,
+          endHour,
+          parseHour(c.startTime),
+          parseHour(c.endTime)
+        )
+      )
+      .map((c) => ({
+        teacherName: c.teacherName,
+        subjectName: c.subjectName,
+        roomName: "",
+        conflictStartHour: c.startTime,
+        conflictEndHour: c.endTime,
+      }));
+    const teacherSchedulesResponse = teacherSchedules.map((c: any) => ({
+      subjectName: c.subjectName,
+      roomName: c.roomName,
+      conflictStartHour: c.startTime,
+      conflictEndHour: c.endTime,
+    }));
     const teacherConflicts = teacherSchedules
-      .filter(isOverlapping)
-      .map((c: any) => ({
+      .filter((c) =>
+        isOverlapping(
+          startHour,
+          endHour,
+          parseHour(c.startTime),
+          parseHour(c.endTime)
+        )
+      )
+      .map((c) => ({
         teacherName: "",
         subjectName: c.subjectName,
         roomName: c.roomName,
@@ -194,9 +234,9 @@ export async function POST(
         {
           error: "Schedule conflict detected",
           conflicts: {
-            room: roomConflicts,
-            section: sectionConflicts,
-            teacher: teacherConflicts,
+            room: roomSchedulesResponse,
+            section: sectionSchedulesResponse,
+            teacher: teacherSchedulesResponse,
             allTeacherSchedules: teacherSchedules.map((c: any) => ({
               subjectName: c.subjectName,
               roomName: c.roomName,

@@ -1,3 +1,4 @@
+// components/AddTeacher.tsx - Update this file
 "use client";
 
 import { useAutoAnimate } from "@formkit/auto-animate/react";
@@ -17,13 +18,16 @@ type Subject = {
   subjectName: string;
 };
 
+// Update schema to include employeeId
 const schema = z.object({
   teacherName: z.string().min(1, "Name is required"),
+  employeeId: z.string().min(1, "Employee ID is required"), // Add employeeId validation
   email: z.string().email("Invalid email"),
   majorSubject: z.string().min(1, "Please select a major subject"),
   imageUrl: z.string().optional(),
 });
 
+// Update FormData type
 type FormData = z.infer<typeof schema>;
 
 export default function AddTeacher() {
@@ -43,6 +47,7 @@ export default function AddTeacher() {
     resolver: zodResolver(schema),
     defaultValues: {
       teacherName: "",
+      employeeId: "", // Add default value
       email: "",
       majorSubject: "",
       imageUrl: "",
@@ -54,7 +59,7 @@ export default function AddTeacher() {
     data: subjectOptions = [],
     isLoading: subjectsLoading,
     error: subjectsError,
-    refetch: refetchSubjects,
+    refetch: refetchSubjects, // Keep refetchSubjects though not used here
   } = useQuery<Subject[], Error>({
     queryKey: ["subjects"],
     queryFn: async () => {
@@ -68,12 +73,13 @@ export default function AddTeacher() {
   });
 
   // Mutation for adding a teacher
-  const { mutate, isPending: isUploading } = useMutation({
+  const { mutate, isPending: isAddingTeacher } = useMutation({
+    // Rename isUploading to isAddingTeacher for clarity
     mutationFn: async (data: FormData) => {
       const res = await fetch("/api/teachers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(data), // data now includes employeeId
       });
       const result = await res.json();
       if (!res.ok) {
@@ -86,6 +92,7 @@ export default function AddTeacher() {
       setSuccessMessage("Teacher has been added successfully!");
       reset();
       queryClient.invalidateQueries({ queryKey: ["teachers"] });
+      setImageSelected(false); // Reset image selected state on success
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to add teacher");
@@ -105,25 +112,50 @@ export default function AddTeacher() {
       <h1 className="text-2xl font-bold">Add New Teacher</h1>
       <div>
         <Label>Profile picture (optional)</Label>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Upload an image before clicking "Add Teacher"
         </p>
         <UploadDropzone
           endpoint="imageUploader"
           onClientUploadComplete={(res) => {
-            setValue("imageUrl", res[0].ufsUrl);
-            setImageSelected(false);
+            if (res && res.length > 0) {
+              setValue("imageUrl", res[0].url); // Use res[0].url based on uploadthing docs
+              setImageSelected(false); // Reset image selected state after successful upload
+              toast.success("Image uploaded successfully!");
+            } else {
+              toast.error("Image upload failed: No file uploaded.");
+              setImageSelected(false); // Reset state even on potential issue
+            }
           }}
           onUploadError={(error: Error) => {
             console.error("Upload failed:", error);
             toast.error("Failed to upload image");
+            setImageSelected(false); // Reset state on error
           }}
-          onChange={(files) => {
-            setImageSelected(files.length > 0);
+          onUploadBegin={() => {
+            setImageSelected(true); // Indicate upload has begun
+            setSuccessMessage(null); // Clear previous success messages
           }}
         />
+        {/* Add a visual indicator if an image is being uploaded or selected */}
+        {imageSelected && (
+          <p className="text-sm text-blue-500 mt-2">Uploading image...</p>
+        )}
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {/* Add Employee ID field */}
+        <div className="space-y-2">
+          <Label htmlFor="employeeId">Employee ID</Label>
+          <Input
+            id="employeeId"
+            {...register("employeeId")}
+            placeholder="e.g., EMP12345"
+          />
+          {errors.employeeId && (
+            <p className="text-red-500 text-sm">{errors.employeeId.message}</p>
+          )}
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="teacherName">Name</Label>
           <Input
@@ -182,14 +214,16 @@ export default function AddTeacher() {
         <Button
           type="submit"
           className="w-full"
-          disabled={isUploading || imageSelected}
+          disabled={isAddingTeacher || imageSelected} // Use isAddingTeacher
         >
-          {isUploading
+          {isAddingTeacher
             ? "Adding..."
             : imageSelected
-            ? "Click Upload First 👆"
+            ? "Click Upload First 👆" // Or show a different message if upload is in progress
             : "Add Teacher"}
         </Button>
+        {/* Consider adding an indicator for upload progress if needed */}
+        {/* {isUploading && <p className="text-blue-500 text-sm mt-2">Image Uploading...</p>} */}
       </form>
       {successMessage && (
         <div className="mt-4 rounded-md bg-green-50 p-3 text-sm text-green-700 border border-green-200">

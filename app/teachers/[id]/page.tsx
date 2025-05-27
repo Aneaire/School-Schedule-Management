@@ -168,7 +168,7 @@ export default function Teacher() {
                 <TabsContent value="schedule" className="space-y-4">
                   <ScheduleView
                     teacherId={teacher.teacherId}
-                    initialSchedules={teacher.schedules}
+                    initialSchedules={teacher.schedules as any[]}
                   />
                 </TabsContent>
 

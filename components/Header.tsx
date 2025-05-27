@@ -1,5 +1,6 @@
 "use client";
 
+import { UserButton } from "@clerk/nextjs";
 import { Award } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -14,7 +15,7 @@ const Header = () => {
           <Award className="h-6 w-6 text-purple-400" />
           <h1 className="text-xl font-bold">FacultyHub</h1>
         </div>
-        <nav className="flex gap-5 text-sm font-mono">
+        <nav className="flex gap-5 text-sm font-mono items-center">
           <Link
             href="/"
             className={cn(
@@ -42,6 +43,9 @@ const Header = () => {
           >
             Rooms
           </Link>
+          <div>
+            <UserButton />
+          </div>
         </nav>
       </div>
     </header>

@@ -8,6 +8,7 @@ import {
   rooms,
   schedules,
   sections,
+  subjectColors,
   subjects,
   teachers,
   times,
@@ -54,21 +55,228 @@ const generateTimeSlots = () => {
   return slots;
 };
 
-// Helper function to generate a consistent color hex for subjects
+// Enhanced color generation with 100+ distinct colors
 const generateSubjectHexColor = (subjectName: string): string => {
   const colors = [
-    "FFEB9C", // Light Red (Hex without #)
-    "BDD7EE", // Light Blue
-    "C6EFCE", // Light Green
-    "FFF2CC", // Light Yellow
-    "E2EFDA", // Light Purple
-    "FDEBF7", // Light Pink
-    "DDEBF7", // Light Indigo
-    "FFD966", // Light Orange
-    "D0F0E0", // Light Teal
-    "E0FFFF", // Light Cyan
-    "E6FFB3", // Light Lime
-    "CFFFE5", // Light Emerald
+    // Reds & Pinks (20 colors)
+    "FFEBEE",
+    "FFCDD2",
+    "EF9A9A",
+    "E57373",
+    "EF5350",
+    "F44336",
+    "E53935",
+    "D32F2F",
+    "C62828",
+    "B71C1C",
+    "FCE4EC",
+    "F8BBD9",
+    "F48FB1",
+    "F06292",
+    "EC407A",
+    "E91E63",
+    "D81B60",
+    "C2185B",
+    "AD1457",
+    "880E4F",
+
+    // Oranges & Ambers (20 colors)
+    "FFF3E0",
+    "FFE0B2",
+    "FFCC80",
+    "FFB74D",
+    "FFA726",
+    "FF9800",
+    "FB8C00",
+    "F57C00",
+    "EF6C00",
+    "E65100",
+    "FFFBF0",
+    "FFEAA7",
+    "FDCB6E",
+    "E17055",
+    "D63031",
+    "FFF8E1",
+    "FFECB3",
+    "FFE082",
+    "FFD54F",
+    "FFCA28",
+
+    // Yellows & Limes (20 colors)
+    "FFFDE7",
+    "FFF9C4",
+    "FFF59D",
+    "FFF176",
+    "FFEE58",
+    "FFEB3B",
+    "FDD835",
+    "F9A825",
+    "F57F17",
+    "FF8F00",
+    "F0F4C3",
+    "E6EE9C",
+    "DCE775",
+    "D4E157",
+    "CDDC39",
+    "C0CA33",
+    "AFB42B",
+    "9E9D24",
+    "827717",
+    "F4FF81",
+
+    // Greens (20 colors)
+    "E8F5E8",
+    "C8E6C9",
+    "A5D6A7",
+    "81C784",
+    "66BB6A",
+    "4CAF50",
+    "43A047",
+    "388E3C",
+    "2E7D32",
+    "1B5E20",
+    "F1F8E9",
+    "DCEDC8",
+    "C5E1A5",
+    "AED581",
+    "9CCC65",
+    "8BC34A",
+    "7CB342",
+    "689F38",
+    "558B2F",
+    "33691E",
+
+    // Teals & Cyans (20 colors)
+    "E0F2F1",
+    "B2DFDB",
+    "80CBC4",
+    "4DB6AC",
+    "26A69A",
+    "009688",
+    "00897B",
+    "00796B",
+    "00695C",
+    "004D40",
+    "E0F7FA",
+    "B2EBF2",
+    "81D4FA",
+    "4FC3F7",
+    "29B6F6",
+    "03A9F4",
+    "039BE5",
+    "0288D1",
+    "0277BD",
+    "01579B",
+
+    // Blues (20 colors)
+    "E3F2FD",
+    "BBDEFB",
+    "90CAF9",
+    "64B5F6",
+    "42A5F5",
+    "2196F3",
+    "1E88E5",
+    "1976D2",
+    "1565C0",
+    "0D47A1",
+    "E8EAF6",
+    "C5CAE9",
+    "9FA8DA",
+    "7986CB",
+    "5C6BC0",
+    "3F51B5",
+    "3949AB",
+    "303F9F",
+    "283593",
+    "1A237E",
+
+    // Purples & Violets (20 colors)
+    "F3E5F5",
+    "E1BEE7",
+    "CE93D8",
+    "BA68C8",
+    "AB47BC",
+    "9C27B0",
+    "8E24AA",
+    "7B1FA2",
+    "6A1B9A",
+    "4A148C",
+    "EDE7F6",
+    "D1C4E9",
+    "B39DDB",
+    "9575CD",
+    "7E57C2",
+    "673AB7",
+    "5E35B1",
+    "512DA8",
+    "4527A0",
+    "311B92",
+
+    // Browns & Grays (20 colors)
+    "EFEBE9",
+    "D7CCC8",
+    "BCAAA4",
+    "A1887F",
+    "8D6E63",
+    "795548",
+    "6D4C41",
+    "5D4037",
+    "4E342E",
+    "3E2723",
+    "FAFAFA",
+    "F5F5F5",
+    "EEEEEE",
+    "E0E0E0",
+    "BDBDBD",
+    "9E9E9E",
+    "757575",
+    "616161",
+    "424242",
+    "212121",
+
+    // Exotic & Unique Colors (20 colors)
+    "FFF8DC",
+    "F0E68C",
+    "DDA0DD",
+    "98FB98",
+    "F0FFF0",
+    "FFE4E1",
+    "FFDEAD",
+    "D2B48C",
+    "BC8F8F",
+    "F4A460",
+    "87CEEB",
+    "98D8E8",
+    "F0E6FF",
+    "E6E6FA",
+    "FFB6C1",
+    "FFA07A",
+    "20B2AA",
+    "87CEFA",
+    "778899",
+    "B0C4DE",
+
+    // Pastel Colors (20 colors)
+    "FFEEF0",
+    "FFE5E7",
+    "FFDBDD",
+    "FFD1D4",
+    "FFC7CA",
+    "FFBDC1",
+    "FFB3B7",
+    "FFA9AE",
+    "FF9FA4",
+    "FF959B",
+    "E5F7FF",
+    "DBF3FF",
+    "D1EFFF",
+    "C7EBFF",
+    "BDE7FF",
+    "B3E3FF",
+    "A9DFFF",
+    "9FDBFF",
+    "95D7FF",
+    "8BD3FF",
   ];
 
   let hash = 0;
@@ -77,6 +285,75 @@ const generateSubjectHexColor = (subjectName: string): string => {
   }
   return colors[Math.abs(hash) % colors.length];
 };
+
+// Function to generate a dark color for subjects, ensuring good contrast with white text
+const generateDarkSubjectColor = (subjectName: string): string => {
+  let hash = 0;
+  for (let i = 0; i < subjectName.length; i++) {
+    hash = subjectName.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  // Generate darker colors suitable for white text
+  const hue = Math.abs(hash) % 360; // 0-359 degrees
+  const saturation = 60 + (Math.abs(hash >> 8) % 40); // 60-100% saturation
+  const lightness = 25 + (Math.abs(hash >> 16) % 35); // 25-60% lightness (darker)
+
+  // Convert HSL to RGB
+  const hslToRgb = (h: number, s: number, l: number) => {
+    h /= 360;
+    s /= 100;
+    l /= 100;
+
+    const a = s * Math.min(l, 1 - l);
+    const f = (n: number) => {
+      const k = (n + h * 12) % 12;
+      return l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    };
+
+    return [
+      Math.round(f(0) * 255),
+      Math.round(f(8) * 255),
+      Math.round(f(4) * 255),
+    ];
+  };
+
+  const [r, g, b] = hslToRgb(hue, saturation, lightness);
+  return `FF${r.toString(16).padStart(2, "0")}${g
+    .toString(16)
+    .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`.toUpperCase();
+};
+
+const getContrastColor = (backgroundColor: string): string => {
+  // Remove FF prefix if present and convert to RGB
+  const hex = backgroundColor.replace(/^FF/, "");
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+
+  // Calculate luminance
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+  // Return white for dark backgrounds, black for light backgrounds
+  return luminance < 0.5 ? "FFFFFFFF" : "FF000000";
+};
+
+async function getOrAssignSubjectColor(subjectName: string): Promise<string> {
+  const existing = await db
+    .select({ colorHex: subjectColors.colorHex })
+    .from(subjectColors)
+    .where(eq(subjectColors.subjectName, subjectName));
+
+  if (existing.length > 0) return existing[0].colorHex;
+
+  const newColor = generateDarkSubjectColor(subjectName); // your hash function
+
+  await db.insert(subjectColors).values({
+    subjectName,
+    colorHex: newColor,
+  });
+
+  return newColor;
+}
 
 const DAYS = [
   "Monday",
@@ -87,6 +364,16 @@ const DAYS = [
   "Saturday",
   "Sunday",
 ];
+
+// Cache for subject colors to avoid repeated database queries
+const colorCache = new Map<string, string>();
+
+async function getOrCacheColor(subjectName: string): Promise<string> {
+  if (colorCache.has(subjectName)) return colorCache.get(subjectName)!;
+  const color = await getOrAssignSubjectColor(subjectName);
+  colorCache.set(subjectName, color);
+  return color;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -291,13 +578,13 @@ export async function GET(request: NextRequest) {
     });
 
     // Add time rows and populate schedule entries
-    timeSlots.forEach((timeSlot, rowIndex) => {
+    for (let rowIndex = 0; rowIndex < timeSlots.length; rowIndex++) {
+      const timeSlot = timeSlots[rowIndex];
       const currentRow = worksheet.getRow(rowIndex + 2); // Start from row 2
-      currentRow.height = 25; // Smaller row height
+      currentRow.height = 25;
 
-      // Add the time label to the first cell (Column A) - Use 12-hour format
       currentRow.getCell(1).value = formatTimeTo12Hour(timeSlot);
-      currentRow.getCell(1).font = { bold: true, size: 8 }; // Smaller font size for time
+      currentRow.getCell(1).font = { bold: true, size: 8 };
       currentRow.getCell(1).alignment = {
         horizontal: "center",
         vertical: "middle",
@@ -309,12 +596,11 @@ export async function GET(request: NextRequest) {
         right: { style: "thin", color: { argb: "FFCCCCCC" } },
       };
 
-      dayColumns.forEach((day, colIndex) => {
-        // Excel column index for the current day (starts from 2 for Monday)
+      for (let colIndex = 0; colIndex < dayColumns.length; colIndex++) {
+        const day = dayColumns[colIndex];
         const excelColIndex = colIndex + 2;
-        const currentCell = currentRow.getCell(excelColIndex); // Cell for the day and time slot
+        const currentCell = currentRow.getCell(excelColIndex);
 
-        // Find schedules that start *exactly* in this time slot for this day
         const schedulesStartingAtSlot = schedulesResult.filter(
           (s) =>
             s.dayName === day &&
@@ -322,17 +608,15 @@ export async function GET(request: NextRequest) {
         );
 
         if (schedulesStartingAtSlot.length > 0) {
-          schedulesStartingAtSlot.forEach((schedule) => {
-            const startRowIndex = timeSlots.indexOf(timeSlot) + 2; // Excel row index (1-based)
-            const startColIndex = dayColumns.indexOf(day) + 2; // Excel column index (1-based)
+          for (const schedule of schedulesStartingAtSlot) {
+            const startRowIndex = timeSlots.indexOf(timeSlot) + 2;
+            const startColIndex = dayColumns.indexOf(day) + 2;
             const endMinutes = timeToMinutes(schedule.endTime);
             const startMinutes = timeToMinutes(schedule.startTime);
             const durationMinutes = endMinutes - startMinutes;
-            const spanInSlots = Math.max(1, Math.ceil(durationMinutes / 30)); // Minimum 1 slot span
+            const spanInSlots = Math.max(1, Math.ceil(durationMinutes / 30));
+            const endRowIndex = startRowIndex + spanInSlots - 1;
 
-            const endRowIndex = startRowIndex + spanInSlots - 1; // Calculate the end row index
-
-            // Merge cells for the schedule block
             worksheet.mergeCells(
               startRowIndex,
               startColIndex,
@@ -340,30 +624,23 @@ export async function GET(request: NextRequest) {
               startColIndex
             );
 
-            // Get the primary cell (top-left of the merged block)
             const primaryCell = worksheet.getCell(startRowIndex, startColIndex);
 
-            // Set cell value based on who is being filtered
             let cellValue = `${schedule.subjectName}`;
-
             if (isFilteringByTeacher) {
-              // When filtering by teacher, show Room and Section
               cellValue += `\n${schedule.roomCode}`;
               cellValue += `\n${schedule.sectionName}`;
             } else if (isFilteringByRoom) {
-              // When filtering by room, show Teacher and Section
               cellValue += `\n${schedule.teacherName}`;
               cellValue += `\n${schedule.sectionName}`;
             } else {
-              // Filtering by section
-              // When filtering by section, show Teacher and Room
               cellValue += `\n${schedule.roomCode}`;
               cellValue += `\n${schedule.teacherName}`;
             }
 
-            primaryCell.value = cellValue;
+            const subjectColor = await getOrCacheColor(schedule.subjectName);
 
-            // Apply formatting
+            primaryCell.value = cellValue;
             primaryCell.alignment = {
               horizontal: "center",
               vertical: "middle",
@@ -372,7 +649,7 @@ export async function GET(request: NextRequest) {
             primaryCell.fill = {
               type: "pattern",
               pattern: "solid",
-              fgColor: { argb: generateSubjectHexColor(schedule.subjectName) },
+              fgColor: { argb: subjectColor },
             };
             primaryCell.border = {
               top: { style: "thin", color: { argb: "FFAAAAAA" } },
@@ -380,12 +657,15 @@ export async function GET(request: NextRequest) {
               bottom: { style: "thin", color: { argb: "FFAAAAAA" } },
               right: { style: "thin", color: { argb: "FFAAAAAA" } },
             };
-            primaryCell.font = { bold: true, size: 8 }; // Smaller font size for block content
-          });
+            // CHANGE THIS LINE - Add white text color
+            primaryCell.font = {
+              bold: true,
+              size: 8,
+              color: { argb: "FFFFFFFF" }, // White text color
+            };
+          }
         } else {
-          // For cells not containing the start of a schedule block,
-          // apply basic styling/border if the cell hasn't been merged
-          const cell = worksheet.getCell(rowIndex + 2, excelColIndex); // Use excelColIndex here
+          const cell = worksheet.getCell(rowIndex + 2, excelColIndex);
           if (!cell.isMerged) {
             cell.border = {
               top: { style: "thin", color: { argb: "FFEEEEEE" } },
@@ -400,8 +680,8 @@ export async function GET(request: NextRequest) {
             };
           }
         }
-      });
-    });
+      }
+    }
 
     // Ensure consistent height for all rows after merges (already set in the loop)
     // worksheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {

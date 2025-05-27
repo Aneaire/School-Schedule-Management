@@ -1,3 +1,4 @@
+// components/AssignSubjectForm.tsx
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -272,6 +273,16 @@ export default function AssignSubjectForm({
 
   const onSlotSelect = (hour: number) => {
     form.setValue("startHour", hour);
+    setShowDialog(false);
+  };
+
+  const onDayChange = (day: string) => {
+    form.setValue("day", day);
+    setShowDialog(false);
+  };
+
+  const onDurationChange = (duration: number) => {
+    form.setValue("duration", duration);
     setShowDialog(false);
   };
 
@@ -706,6 +717,8 @@ export default function AssignSubjectForm({
         onOpenChange={setShowDialog}
         conflicts={conflicts}
         onSlotSelect={onSlotSelect}
+        onDayChange={onDayChange}
+        onDurationChange={onDurationChange}
         roomId={selectedRoomId}
         day={selectedDay}
         duration={form.watch("duration")}

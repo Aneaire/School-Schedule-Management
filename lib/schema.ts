@@ -48,9 +48,9 @@ export const subjects = sqliteTable("subjects", {
   units: integer("units").notNull(),
 });
 
-// Teachers table
 export const teachers = sqliteTable("teachers", {
   teacherId: integer("teacher_id").primaryKey({ autoIncrement: true }),
+  employeeId: text("employee_id").unique().notNull(), // Added employeeId - make it unique and not null
   teacherName: text("teacher_name").notNull(),
   email: text("email").notNull(),
   imageUrl: text("image_url"),
@@ -93,8 +93,14 @@ export const sections = sqliteTable("sections", {
     .notNull(),
 });
 
+export const subjectColors = sqliteTable("subject_colors", {
+  subjectName: text("subject_name").primaryKey(),
+  colorHex: text("color_hex").notNull(), // e.g., "FFD966"
+});
+
 // Export the schema object
 export const schema = {
+  subjectColors,
   courses,
   classes,
   days,
