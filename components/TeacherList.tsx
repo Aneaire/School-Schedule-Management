@@ -292,7 +292,7 @@ export default function TeacherList() {
                       </CardDescription>
                     </div>
                   </div>
-                  <div className=" items-center text-sm text-gray-400 hidden md:flex">
+                  <div className=" items-center text-sm text-gray-400 hidden xl:flex">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
